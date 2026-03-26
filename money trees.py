@@ -10,6 +10,9 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 import streamlit as st
+import os
+import random
+import base64
 import plotly.express as px
 import pandas as pd
 from PIL import Image
@@ -17,45 +20,72 @@ import threading
 import copy
 import streamlit as st
 
-# --- פונקציית בדיקת סיסמה ---
 def check_password():
-    """מחזירה True אם המשתמש הזין סיסמה נכונה"""
-    def password_entered():
-        # שנה את '1234' לסיסמה שאתה וחברה שלך תבחרו
-        if st.session_state["password"] == "barofir123": 
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # מחיקה מהזיכרון ליתר ביטחון
-        else:
-            st.session_state["password_correct"] = False
-
     if "password_correct" not in st.session_state:
-        # הצגת תיבת טקסט לסיסמה בפעם הראשונה
-        st.info("🔒 האפליקציה מוגנת. נא להזין סיסמה כדי להמשיך.")
-        st.text_input("סיסמה:", type="password", on_change=password_entered, key="password")
-        return False
-    elif not st.session_state["password_correct"]:
-        # הודעת שגיאה אם הסיסמה לא נכונה
-        st.text_input("סיסמה:", type="password", on_change=password_entered, key="password")
-        st.error("😕 סיסמה שגויה. נסה שוב.")
-        return False
-    else:
-        # הכל תקין, אפשר להמשיך
-        return True
+        set_login_background()
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; color: white; font-size: 3.5rem; text-shadow: 2px 2px 10px rgba(0,0,0,0.5);'>Money Trees 🌳</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: white; font-size: 1.2rem; opacity: 0.9;'>Managing expenses with style</p>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
 
-# עצירת הרצת האפליקציה כאן אם הסיסמה לא הוזנה
+        def password_entered():
+            if st.session_state["password"] == "1234": # שנה לסיסמה שלך
+                st.session_state["password_correct"] = True
+                del st.session_state["password"]
+            else:
+                st.session_state["password_correct"] = False
+
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.text_input("הזן סיסמה לכניסה:", type="password", on_change=password_entered, key="password")
+            if st.session_state.get("password_correct") == False:
+                st.error("😕 סיסמה לא נכונה")
+        return False
+    return True
+
 if not check_password():
     st.stop()
 
-# --- כל מה שמתחת לשורה הזו יופיע רק אחרי הקלדת סיסמה נכונה ---
-
-# הוספת כפתור רענון בתפריט הצד (Sidebar)
 if st.sidebar.button("🔄 רענן נתונים מהענן"):
     if "app_data" in st.session_state:
         del st.session_state["app_data"]
-    st.toast("הנתונים מתרעננים...")
     st.rerun()
 
 # כאן ממשיך שאר הקוד המקורי שלך (load_data, תצוגת הגרפים, הזנת הוצאות וכו')
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+def set_login_background():
+    assets_dir = "assets"
+    try:
+        images = [f for f in os.listdir(assets_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
+        if images:
+            selected_img = os.path.join(assets_dir, random.choice(images))
+            bin_str = get_base64_of_bin_file(selected_img)
+            
+            page_bg_img = f'''
+            <style>
+            .stApp {{
+                background: url("data:image/png;base64,{bin_str}");
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }}
+            .stApp::before {{
+                content: "";
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background-color: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                z-index: -1;
+            }}
+            </style>
+            '''
+            st.markdown(page_bg_img, unsafe_allow_html=True)
+    except:
+        pass
 
 
 st.set_page_config(layout="wide")
