@@ -34,20 +34,21 @@ def _get_worksheet():
     if _WORKSHEET is not None:
         return _WORKSHEET
 
-    if not GOOGLE_CREDENTIALS_PATH.exists():
-        raise FileNotFoundError(
-            "Missing 'google_credentials.json'. Place it next to this script."
+    # שינוי קריטי: קריאת הנתונים מהסודות של Streamlit במקום מהקובץ
+    try:
+        creds_dict = dict(st.secrets["gcp_service_account"])
+        credentials = Credentials.from_service_account_info(
+            creds_dict,
+            scopes=SCOPE,
         )
+        gc = gspread.authorize(credentials)
 
-    credentials = Credentials.from_service_account_file(
-        str(GOOGLE_CREDENTIALS_PATH),
-        scopes=SCOPE,
-    )
-    gc = gspread.authorize(credentials)
-
-    spreadsheet = gc.open("ExpenseTrackerDB")
-    _WORKSHEET = spreadsheet.sheet1
-    return _WORKSHEET
+        spreadsheet = gc.open("ExpenseTrackerDB")
+        _WORKSHEET = spreadsheet.sheet1
+        return _WORKSHEET
+    except Exception as e:
+        st.error(f"שגיאה בחיבור לגוגל: {e}")
+        raise e
 
 def load_data() -> dict:
     worksheet = _get_worksheet()
