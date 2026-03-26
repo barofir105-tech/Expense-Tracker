@@ -19,42 +19,12 @@ from PIL import Image
 import threading
 import copy
 import streamlit as st
+st.set_page_config(layout="wide")
 
-def check_password():
-    if "password_correct" not in st.session_state:
-        set_login_background()
-        st.markdown("<br><br><h1 style='text-align: center; color: white; text-shadow: 2px 2px 10px rgba(0,0,0,0.8);'>Money Trees 🌳</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: white; opacity: 0.9;'>Managing expenses with style</p><br>", unsafe_allow_html=True)
-
-        def password_entered():
-            if st.session_state["password"] == "1234": # שנה לסיסמה שלך
-                st.session_state["password_correct"] = True
-                del st.session_state["password"]
-            else:
-                st.session_state["password_correct"] = False
-
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.text_input("הזן סיסמה לכניסה:", type="password", on_change=password_entered, key="password")
-            if st.session_state.get("password_correct") == False:
-                st.error("😕 סיסמה לא נכונה")
-        return False
-    return True
-
-if not check_password():
-    st.stop()
-
-if st.sidebar.button("🔄 רענן נתונים מהענן"):
-    if "app_data" in st.session_state:
-        del st.session_state["app_data"]
-    st.rerun()
-
-# כאן ממשיך שאר הקוד המקורי שלך (load_data, תצוגת הגרפים, הזנת הוצאות וכו')
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
     return base64.b64encode(data).decode()
-
 def set_login_background():
     # מוצא את הנתיב המדויק שבו האפליקציה רצה
     current_dir = os.path.dirname(__file__)
@@ -90,9 +60,44 @@ def set_login_background():
             '''
             st.markdown(page_bg_img, unsafe_allow_html=True)
     except:
-        pass
+        pass   
 
-st.set_page_config(layout="wide")
+def check_password():
+    if "password_correct" not in st.session_state:
+        set_login_background()
+        st.markdown("<br><br><h1 style='text-align: center; color: white; text-shadow: 2px 2px 10px rgba(0,0,0,0.8);'>Money Trees 🌳</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: white; opacity: 0.9;'>Managing expenses with style</p><br>", unsafe_allow_html=True)
+
+        def password_entered():
+            if st.session_state["password"] == "1234": # שנה לסיסמה שלך
+                st.session_state["password_correct"] = True
+                del st.session_state["password"]
+            else:
+                st.session_state["password_correct"] = False
+
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.text_input("הזן סיסמה לכניסה:", type="password", on_change=password_entered, key="password")
+            if st.session_state.get("password_correct") == False:
+                st.error("😕 סיסמה לא נכונה")
+        return False
+    return True
+
+if not check_password():
+    st.stop()
+
+if st.sidebar.button("🔄 רענן נתונים מהענן"):
+    if "app_data" in st.session_state:
+        del st.session_state["app_data"]
+    st.rerun()
+
+# כאן ממשיך שאר הקוד המקורי שלך (load_data, תצוגת הגרפים, הזנת הוצאות וכו')
+
+
+
+
+
+
 
 ASSETS_DIR = Path(__file__).with_name("assets")
 
