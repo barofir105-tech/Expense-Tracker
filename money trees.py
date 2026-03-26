@@ -23,10 +23,8 @@ import streamlit as st
 def check_password():
     if "password_correct" not in st.session_state:
         set_login_background()
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown("<h1 style='text-align: center; color: white; font-size: 3.5rem; text-shadow: 2px 2px 10px rgba(0,0,0,0.5);'>Money Trees 🌳</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: white; font-size: 1.2rem; opacity: 0.9;'>Managing expenses with style</p>", unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br><br><h1 style='text-align: center; color: white; text-shadow: 2px 2px 10px rgba(0,0,0,0.8);'>Money Trees 🌳</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: white; opacity: 0.9;'>Managing expenses with style</p><br>", unsafe_allow_html=True)
 
         def password_entered():
             if st.session_state["password"] == "1234": # שנה לסיסמה שלך
@@ -58,48 +56,41 @@ def get_base64_of_bin_file(bin_file):
     return base64.b64encode(data).decode()
 
 def set_login_background():
-    # מוצא איפה הקוד נמצא פיזית על השרת
-    base_path = os.path.dirname(__file__)
-    assets_path = os.path.join(base_path, "assets")
+    # מוצא את הנתיב המדויק שבו האפליקציה רצה
+    current_dir = os.path.dirname(__file__)
+    assets_dir = os.path.join(current_dir, "assets")
     
-    # בדיקה אם התיקייה קיימת (מנסה גם Assets עם A גדולה)
-    if not os.path.exists(assets_path):
-        assets_path = os.path.join(base_path, "Assets")
-    
-    # אם התיקייה עדיין לא נמצאה, פשוט יוצא מהפונקציה בשקט
-    if not os.path.exists(assets_path):
-        return 
+    if not os.path.exists(assets_dir):
+        return # מונע קריסה אם התיקייה חסרה
 
     try:
-        images = [f for f in os.listdir(assets_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
-        if not images:
-            return
+        images = [f for f in os.listdir(assets_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
+        if images:
+            selected_img = os.path.join(assets_dir, random.choice(images))
+            with open(selected_img, 'rb') as f:
+                bin_str = base64.b64encode(f.read()).decode()
             
-        selected_img = os.path.join(assets_path, random.choice(images))
-        bin_str = get_base64_of_bin_file(selected_img)
-        
-        page_bg_img = f'''
-        <style>
-        .stApp {{
-            background: url("data:image/png;base64,{bin_str}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }}
-        .stApp::before {{
-            content: "";
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            z-index: -1;
-        }}
-        </style>
-        '''
-        st.markdown(page_bg_img, unsafe_allow_html=True)
-    except Exception:
-        pass # מונע קריסה של האפליקציה בכל מקרה של תקלה בתמונה
-
+            page_bg_img = f'''
+            <style>
+            .stApp {{
+                background: url("data:image/png;base64,{bin_str}");
+                background-size: cover;
+                background-position: center;
+                background-attachment: fixed;
+            }}
+            .stApp::before {{
+                content: "";
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                background-color: rgba(0, 0, 0, 0.45);
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                z-index: -1;
+            }}
+            </style>
+            '''
+            st.markdown(page_bg_img, unsafe_allow_html=True)
+    except:
+        pass
 
 st.set_page_config(layout="wide")
 
@@ -118,21 +109,20 @@ def _get_worksheet():
     if _WORKSHEET is not None:
         return _WORKSHEET
 
-    # שינוי קריטי: קריאת הנתונים מהסודות של Streamlit במקום מהקובץ
     try:
+        # שימוש ב-Secrets שהגדרנו בשרת במקום בקובץ שנמחק
         creds_dict = dict(st.secrets["gcp_service_account"])
         credentials = Credentials.from_service_account_info(
             creds_dict,
             scopes=SCOPE,
         )
         gc = gspread.authorize(credentials)
-
         spreadsheet = gc.open("ExpenseTrackerDB")
         _WORKSHEET = spreadsheet.sheet1
         return _WORKSHEET
     except Exception as e:
-        st.error(f"שגיאה בחיבור לגוגל: {e}")
-        raise e
+        st.error(f"שגיאה בחיבור למסד הנתונים: {e}")
+        st.stop()
 
 def load_data() -> dict:
     worksheet = _get_worksheet()
