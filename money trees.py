@@ -58,33 +58,46 @@ def get_base64_of_bin_file(bin_file):
     return base64.b64encode(data).decode()
 
 def set_login_background():
+    # בדיקה אם אנחנו ב-Streamlit Cloud או במחשב המקומי
     assets_dir = "assets"
+    
+    # בדיקה אם התיקייה בכלל קיימת
+    if not os.path.exists(assets_dir):
+        # נסיון אחרון - אולי היא מתחילה באות גדולה?
+        if os.path.exists("Assets"):
+            assets_dir = "Assets"
+        else:
+            return # אם אין תיקייה, פשוט צא מהפונקציה בלי להקריס
+
     try:
         images = [f for f in os.listdir(assets_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
-        if images:
-            selected_img = os.path.join(assets_dir, random.choice(images))
-            bin_str = get_base64_of_bin_file(selected_img)
+        if not images:
+            return # אם אין תמונות, צא מהפונקציה
             
-            page_bg_img = f'''
-            <style>
-            .stApp {{
-                background: url("data:image/png;base64,{bin_str}");
-                background-size: cover;
-                background-position: center;
-                background-attachment: fixed;
-            }}
-            .stApp::before {{
-                content: "";
-                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                background-color: rgba(0, 0, 0, 0.4);
-                backdrop-filter: blur(15px);
-                -webkit-backdrop-filter: blur(15px);
-                z-index: -1;
-            }}
-            </style>
-            '''
-            st.markdown(page_bg_img, unsafe_allow_html=True)
-    except:
+        selected_img = os.path.join(assets_dir, random.choice(images))
+        bin_str = get_base64_of_bin_file(selected_img)
+        
+        page_bg_img = f'''
+        <style>
+        .stApp {{
+            background: url("data:image/png;base64,{bin_str}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }}
+        .stApp::before {{
+            content: "";
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            z-index: -1;
+        }}
+        </style>
+        '''
+        st.markdown(page_bg_img, unsafe_allow_html=True)
+    except Exception as e:
+        # אם יש שגיאה כלשהי, אל תראה אותה למשתמש, פשוט תמשיך
         pass
 
 
