@@ -15,6 +15,47 @@ import pandas as pd
 from PIL import Image
 import threading
 import copy
+import streamlit as st
+
+# --- פונקציית בדיקת סיסמה ---
+def check_password():
+    """מחזירה True אם המשתמש הזין סיסמה נכונה"""
+    def password_entered():
+        # שנה את '1234' לסיסמה שאתה וחברה שלך תבחרו
+        if st.session_state["password"] == "barofir123": 
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # מחיקה מהזיכרון ליתר ביטחון
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # הצגת תיבת טקסט לסיסמה בפעם הראשונה
+        st.info("🔒 האפליקציה מוגנת. נא להזין סיסמה כדי להמשיך.")
+        st.text_input("סיסמה:", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["password_correct"]:
+        # הודעת שגיאה אם הסיסמה לא נכונה
+        st.text_input("סיסמה:", type="password", on_change=password_entered, key="password")
+        st.error("😕 סיסמה שגויה. נסה שוב.")
+        return False
+    else:
+        # הכל תקין, אפשר להמשיך
+        return True
+
+# עצירת הרצת האפליקציה כאן אם הסיסמה לא הוזנה
+if not check_password():
+    st.stop()
+
+# --- כל מה שמתחת לשורה הזו יופיע רק אחרי הקלדת סיסמה נכונה ---
+
+# הוספת כפתור רענון בתפריט הצד (Sidebar)
+if st.sidebar.button("🔄 רענן נתונים מהענן"):
+    if "app_data" in st.session_state:
+        del st.session_state["app_data"]
+    st.toast("הנתונים מתרעננים...")
+    st.rerun()
+
+# כאן ממשיך שאר הקוד המקורי שלך (load_data, תצוגת הגרפים, הזנת הוצאות וכו')
 
 
 st.set_page_config(layout="wide")
