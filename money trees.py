@@ -58,23 +58,24 @@ def get_base64_of_bin_file(bin_file):
     return base64.b64encode(data).decode()
 
 def set_login_background():
-    # בדיקה אם אנחנו ב-Streamlit Cloud או במחשב המקומי
-    assets_dir = "assets"
+    # מוצא איפה הקוד נמצא פיזית על השרת
+    base_path = os.path.dirname(__file__)
+    assets_path = os.path.join(base_path, "assets")
     
-    # בדיקה אם התיקייה בכלל קיימת
-    if not os.path.exists(assets_dir):
-        # נסיון אחרון - אולי היא מתחילה באות גדולה?
-        if os.path.exists("Assets"):
-            assets_dir = "Assets"
-        else:
-            return # אם אין תיקייה, פשוט צא מהפונקציה בלי להקריס
+    # בדיקה אם התיקייה קיימת (מנסה גם Assets עם A גדולה)
+    if not os.path.exists(assets_path):
+        assets_path = os.path.join(base_path, "Assets")
+    
+    # אם התיקייה עדיין לא נמצאה, פשוט יוצא מהפונקציה בשקט
+    if not os.path.exists(assets_path):
+        return 
 
     try:
-        images = [f for f in os.listdir(assets_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
+        images = [f for f in os.listdir(assets_path) if f.endswith(('.png', '.jpg', '.jpeg'))]
         if not images:
-            return # אם אין תמונות, צא מהפונקציה
+            return
             
-        selected_img = os.path.join(assets_dir, random.choice(images))
+        selected_img = os.path.join(assets_path, random.choice(images))
         bin_str = get_base64_of_bin_file(selected_img)
         
         page_bg_img = f'''
@@ -96,9 +97,8 @@ def set_login_background():
         </style>
         '''
         st.markdown(page_bg_img, unsafe_allow_html=True)
-    except Exception as e:
-        # אם יש שגיאה כלשהי, אל תראה אותה למשתמש, פשוט תמשיך
-        pass
+    except Exception:
+        pass # מונע קריסה של האפליקציה בכל מקרה של תקלה בתמונה
 
 
 st.set_page_config(layout="wide")
