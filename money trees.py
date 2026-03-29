@@ -658,13 +658,13 @@ with expenses_tab:
             for item in expenses_for_month
             if item.get("Type", "Expense") == "Expense"
         )
-        effective_available_funds = base_funds + extra_income
+        effective_available_funds = base_funds
         total_expenses = manual_expenses_total + standing_orders_total
         remaining_funds = effective_available_funds - total_expenses
 
         st.subheader("Monthly Overview")
         st.markdown(f"**Extra Income:** +{currency}{extra_income:,.2f}")
-        st.markdown(f"**Effective Available Funds:** {currency}{effective_available_funds:,.2f}")
+        st.markdown(f"**Set Monthly Budget:** {currency}{effective_available_funds:,.2f}")
         st.markdown(f"**Total Expenses:** {currency}{total_expenses:,.2f}")
         st.markdown(f"**Remaining Funds:** {currency}{remaining_funds:,.2f}")
 
