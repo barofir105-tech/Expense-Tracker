@@ -63,25 +63,34 @@ def set_login_background():
         pass   
 
 def check_password():
-    if "password_correct" not in st.session_state:
-        set_login_background()
-        st.markdown("<br><br><h1 style='text-align: center; color: white; text-shadow: 2px 2px 10px rgba(0,0,0,0.8);'>Money Trees 🌳</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: white; opacity: 0.9;'>Managing expenses with style</p><br>", unsafe_allow_html=True)
+    # 1. קודם כל בודקים אם המשתמש כבר מחובר בהצלחה
+    if st.session_state.get("password_correct", False):
+        return True
 
-        def password_entered():
-            if st.session_state["password"] == "1234": # שנה לסיסמה שלך
-                st.session_state["password_correct"] = True
-                del st.session_state["password"]
-            else:
-                st.session_state["password_correct"] = False
+    # 2. אם הוא לא מחובר, מציגים את רקע ההתחברות והכותרות
+    set_login_background()
+    st.markdown("<br><br><h1 style='text-align: center; color: white; text-shadow: 2px 2px 10px rgba(0,0,0,0.8);'>Money Trees 🌳</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: white; opacity: 0.9;'>Managing expenses with style</p><br>", unsafe_allow_html=True)
 
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.text_input("הזן סיסמה לכניסה:", type="password", on_change=password_entered, key="password")
-            if st.session_state.get("password_correct") == False:
-                st.error("😕 סיסמה לא נכונה")
-        return False
-    return True
+    # הפונקציה שרצה ברגע שמקלידים סיסמה
+    def password_entered():
+        # מושכים את הסיסמה מהכספת ולא מטקסט גלוי
+        if st.session_state["password"] == st.secrets["app_password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # מחיקת הסיסמה מהזיכרון מטעמי אבטחה
+        else:
+            st.session_state["password_correct"] = False
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.text_input("הזן סיסמה לכניסה:", type="password", on_change=password_entered, key="password")
+        
+        # 3. מציגים שגיאה רק אם ניסו להתחבר ונכשלו
+        if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+            st.error("😕 סיסמה לא נכונה")
+            
+    # כל עוד לא הוחזר True למעלה, מחזירים False ומונעים גישה לשאר האפליקציה
+    return False
 
 if not check_password():
     st.stop()
